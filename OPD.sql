@@ -1,4 +1,4 @@
---OPD
+--OPD 4/10/64
 select null as "CLINIC",v.hn as HN,to_char(visit_date::date,'yyyyddmm') as DATEOPD
 ,replace(left(visit_time,5),':','') as TIMEOPD
 ,v.vn as SEQ 
