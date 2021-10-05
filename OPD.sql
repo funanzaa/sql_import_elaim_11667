@@ -1,5 +1,5 @@
---OPD 4/10/64
-select null as "CLINIC",v.hn as HN,to_char(visit_date::date,'yyyyddmm') as DATEOPD
+--OPD 05/10/64
+select null as "CLINIC",v.hn as HN,to_char(visit_date::date,'yyyymmdd') as DATEOPD
 ,replace(left(visit_time,5),':','') as TIMEOPD
 ,v.vn as SEQ 
 ,'1' as UUC -- การใช้สิทธิ (เพิ่มเติม) 1 ใช้สิทธิ, 2 ไมใช้สิทธิ
@@ -10,12 +10,29 @@ select null as "CLINIC",v.hn as HN,to_char(visit_date::date,'yyyyddmm') as DATEO
 ,v_vital_sign_opd.pressure_min as DBP --ความดันโลหิตค่าตัวล่าง
 ,v_vital_sign_opd.pulse as PR --อัตราการเต้นหัวใจ
 ,v_vital_sign_opd.respiration as RR --อัตราการหายใจ
-,'' as OPTYPE --ประเภทการให้บริการ
+--type 7
+,case 
+    when TRIM(get_plan.description) = 'นัดรับยา(บัตรทอง)' or TRIM(get_plan.description) = 'ปฐมภูมิUC'  or TRIM(get_plan.description) = 'UC บัตร ท. [ผู้มีรายได้น้อย]' or 
+    TRIM(get_plan.description) = 'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท' or TRIM(get_plan.description) = 'UC บัตร ท. ภิกษุ/ผู้นำศาสนา /ยกเว้นค่าธรรมเนียม 30 บาท'  or TRIM(get_plan.description) = 'UC บัตร ท. [ครอบครัวทหารผ่านศึก]' or 
+    TRIM(get_plan.description) = 'UC บัตรผู้นำชุมชน /ยกเว้นค่าธรรมเนียม 30 บาท' or TRIM(get_plan.description) = 'UC บัตร ท. [บัตร อสม]'  or TRIM(get_plan.description) = 'UC ท. สิทธิ์ว่าง' or 
+    TRIM(get_plan.description) = 'UC ในเครือข่าย /ยกเว้นค่าธรรมเนียม 30 บาท' or TRIM(get_plan.description) = 'UC ฉุกเฉิน /ยกเว้นค่าธรรมเนียม 30 บาท (ต่างจังหวัด)'  or TRIM(get_plan.description) = 'บัตรทอง ช่วงอายุ 12-59 ปี' or 
+    TRIM(get_plan.description) = 'บัตรทอง อายุมากกว่า 60 ปี' or TRIM(get_plan.description) = 'บัตรทอง อายุไม่เกิน 12 ปีบริบูรณ์'  or TRIM(get_plan.description) = 'นักศึกษา - บัตรทอง ช่วงอายุ 12-59 ปี' then '7' 
+--type 3 = AE นอกบัญชีเครือข่าย
+    when TRIM(get_plan.description) = 'UC สิทธิอื่นใน กทม. (Model 5)' or TRIM(get_plan.description) = 'UC นอกเครือข่าย /ยกเว้นค่าธรรมเนียม 30 บาท' then '3'
+--type 2 = AE ในบัญชีเครือข่าย
+    when TRIM(get_plan.description) = 'UC ฉุกเฉินในเครือข่าย (model 5)' or TRIM(get_plan.description) = 'UC ฉุกเฉิน /ยกเว้นค่าธรรมเนียม 30 บาท(กทม.)' then '3'
+--type 0 = Refer ในบัญชีเครือข่ายเดียวกัน
+    when TRIM(get_plan.description) = 'ศูนย์บริการสาธารณสุข 59 ทุ่งครุ(13702)' or TRIM(get_plan.description) = 'รักษ์ศิริคลินิกเวชกรรม สาขาทุ่งครุ (41864)' or TRIM(get_plan.description) = 'ศูนย์บริการสาธารณสุข 58 ล้อม-พิมเสน ฟักอุดม(13701)' or
+         TRIM(get_plan.description) = 'สรรธนาคลินิกเวชกรรม (42097)' or TRIM(get_plan.description) = 'สิริยาสหคลินิก (15185)' or TRIM(get_plan.description) = 'ศูนย์บริการสาธารณสุข 39 ราษฎร์บูรณะ (13684)' then '0'
+--type 4 = OP พิการ
+    when TRIM(get_plan.description) = 'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ในกรุงเทพ' or TRIM(get_plan.description) = 'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ต่างจังหวัด' then '4' 
+    else  TRIM(get_plan.description) end as OPTYPE --ประเภทการให้บริการ
+,TRIM(get_plan.description) as test_OPTYPE
 ,case when v.fix_coming_type is null then '0' else '1' end as TYPEIN --ประเภทการมารับบริการ
 ,case when doctor_discharge_opd.fix_opd_discharge_status_id = '51' then '1' -- จำหน่ายกลับบ้าน 
 	when doctor_discharge_opd.fix_opd_discharge_status_id = '52' then '4' -- เสียชีวิต
-	when doctor_discharge_opd.fix_opd_discharge_status_id = '53' then 'consult' --Refer ต่อ 
-	when doctor_discharge_opd.fix_opd_discharge_status_id = '54' then '3' 
+	when doctor_discharge_opd.fix_opd_discharge_status_id = '53' then 'consult' 
+	when doctor_discharge_opd.fix_opd_discharge_status_id = '54' then '3' --Refer ต่อ 
 	else '' end as TYPEOUT --สถานะผู้ป่วยเมื่อเสร็จสิ้นบริการ
 from visit v -- ข้อมูลการเข้ารับบริการ
 left join (select vital_sign_extend.visit_id,vital_sign_extend.main_symptom 
@@ -36,8 +53,48 @@ left join (
 				 		) chk_vital_sign_opd on chk_vital_sign_opd.vital_sign_opd_id = vital_sign_opd.vital_sign_opd_id and chk_vital_sign_opd.chk_dup = 1
                  ) v_vital_sign_opd on v.visit_id = v_vital_sign_opd.visit_id-- Vital Sign ผู้ป่วยนอก ดึงเฉพาะ recode ล่าสุด
 left join doctor_discharge_opd on v.visit_id = doctor_discharge_opd.visit_id 
+left join (
+					select plan_order_item.visit_id, plan.description
+					from ( 
+							select DISTINCT(visit_id),plan_id
+							from order_item 
+								) plan_order_item
+					inner join ( 
+                                SELECT *
+                                from plan
+                                where trim(plan.description) in (
+                                'ศูนย์บริการสาธารณสุข 59 ทุ่งครุ(13702)'
+                                ,'รักษ์ศิริคลินิกเวชกรรม สาขาทุ่งครุ (41864)'
+                                ,'ศูนย์บริการสาธารณสุข 58 ล้อม-พิมเสน ฟักอุดม(13701)'
+                                ,'UC ฉุกเฉินในเครือข่าย (model 5)'
+                                ,'UC สิทธิอื่นใน กทม. (Model 5)'
+                                ,'สรรธนาคลินิกเวชกรรม (42097)'
+                                ,'สิริยาสหคลินิก (15185)'
+                                ,'ศูนย์บริการสาธารณสุข 39 ราษฎร์บูรณะ (13684)'
+                                ,'นัดรับยา(บัตรทอง)'
+                                ,'ปฐมภูมิUC'
+                                ,'UC นอกเครือข่าย /ยกเว้นค่าธรรมเนียม 30 บาท'
+                                ,'UC บัตร ท. [ผู้มีรายได้น้อย]'
+                                ,'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท'
+                                ,'UC บัตร ท. ภิกษุ/ผู้นำศาสนา /ยกเว้นค่าธรรมเนียม 30 บาท'
+                                ,'UC บัตร ท. [ครอบครัวทหารผ่านศึก]'
+                                ,'UC บัตรผู้นำชุมชน /ยกเว้นค่าธรรมเนียม 30 บาท'
+                                ,'UC บัตร ท. [บัตร อสม]'
+                                ,'UC ท. สิทธิ์ว่าง'
+                                ,'UC ฉุกเฉิน /ยกเว้นค่าธรรมเนียม 30 บาท(กทม.)'
+                                ,'UC ในเครือข่าย /ยกเว้นค่าธรรมเนียม 30 บาท'
+                                ,'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ในกรุงเทพ'
+                                ,'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ต่างจังหวัด'
+                                ,'UC ฉุกเฉิน /ยกเว้นค่าธรรมเนียม 30 บาท (ต่างจังหวัด)'
+                                ,'บัตรทอง ช่วงอายุ 12-59 ปี'
+                                ,'บัตรทอง อายุมากกว่า 60 ปี'
+                                ,'บัตรทอง อายุไม่เกิน 12 ปีบริบูรณ์'
+                                ,'นักศึกษา - บัตรทอง ช่วงอายุ 12-59 ปี')  -- เฉพาะ excel
+                    )plan on plan_order_item.plan_id = plan.plan_id
+				) get_plan on v.visit_id = get_plan.visit_id -- ดึง plan ใน visit
 where v.visit_date = '2021-09-01'
 and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
 and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
+--and v.vn ='6409010008'
 order by v.vn
