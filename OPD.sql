@@ -1,4 +1,4 @@
---OPD 05/10/64
+--OPD 05/10/64 v.1.0
 select null as "CLINIC",v.hn as HN,to_char(visit_date::date,'yyyymmdd') as DATEOPD
 ,replace(left(visit_time,5),':','') as TIMEOPD
 ,v.vn as SEQ 
@@ -59,7 +59,8 @@ left join (
 	inner join plan on visit_payment.plan_id  = plan.plan_id
 	where priority = '1'
 ) get_plan on v.visit_id = get_plan.visit_id -- ดึง plan ใน visit_payment
-where v.visit_date = '2021-09-01'
+where v.visit_date::date >= '2021-09-01' 
+and v.visit_date::date <= '2021-09-01'
 and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
 and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
