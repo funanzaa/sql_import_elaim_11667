@@ -1,4 +1,4 @@
---DRU 05/10/64 v.1.0
+--DRU 07/10/64 v.1.1
 select  base_site.base_site_id as HCODE
 ,v.hn as HN
 ,'' as AN --พิ่มฟิลด์ตามโครงสร้าง หลัก e-Claim OPD เป็นค่าว่าง
@@ -34,6 +34,6 @@ where v.visit_date::date >= '2021-09-01'
 and v.visit_date::date <= '2021-09-01'
 and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
-and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
+--and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
 order by v.vn 
 --and v.visit_id = '121090107433621501'

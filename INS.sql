@@ -1,4 +1,4 @@
---INS 06/10/64 v.1.0
+--INS 07/10/64 v.1.1
 -- มาตรฐานแฟ้มข้อมูลผู้มีสิทธิการรักษาพยาบาล (INS)
 with cte1 as (
 	select v.hn 
@@ -16,10 +16,11 @@ with cte1 as (
 	left join base_plan_group on visit_payment.base_plan_group_id = base_plan_group.base_plan_group_id 
 	left join plan on visit_payment.plan_id = plan.plan_id 
 	,base_site
-	where v.visit_date = '2021-09-01'
+	where v.visit_date::date >= '2021-09-01' 
+	and v.visit_date::date <= '2021-09-01'
 	and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 	and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
-	and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
+	--and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
 	and visit_payment.priority = '1' 
 	and base_plan_group.base_plan_group_code in ('Model5','UC','CHECKUP') -- สิทธิ์ UC
 	--and v.visit_id = '121090107433621501'
