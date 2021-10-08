@@ -1,4 +1,4 @@
---PAT 06/10/64 v.1.0
+--PAT 08/10/64 v.1.2
 -- มาตรฐานแฟ้มข้อมูลผู้ป่วยกลาง (PAT)
 select base_site.base_site_id 
 ,p.hn 
@@ -9,15 +9,14 @@ select base_site.base_site_id
 ,case when marriage.fix_marriage_id = '5' then '3' -- imed 5 = หม้าย , nhso 3 = หม้าย
  	  when marriage.fix_marriage_id = '3' then '5' -- imed 3 = แยกกันอยู่ (ร้าง) , nhso 5 = แยกกันอยู
  	  else marriage.fix_marriage_id end as MARRIAGE 
- 	  ,p.patient_id 
- ,occupation.fix_occupation_id as OCCUPA
+ ,case when occupation.fix_occupation_id <> '' then occupation.fix_occupation_id  else '000'  end as OCCUPA
  ,nationality.fix_nationality_id as NATION
  ,p.pid as PERSON_ID
  --,char_length(p.firstname||' '||p.lastname||','||p.prename) as NAMEPAT
- ,case when char_length(p.firstname||' '||p.lastname||','||p.prename) > 36 then substring(p.firstname||' '||p.lastname||','||p.prename,1,36) else p.firstname||' '||p.lastname||','||p.prename end as NAMEPAT -- check over 36
-,p.prename as TITLE
-,p.firstname as FNAME
-,p.lastname as LNAME
+ ,case when char_length(trim(p.firstname)||' '||trim(p.lastname)||','||trim(p.prename)) > 36 then substring(trim(p.firstname)||' '||trim(p.lastname)||','||trim(p.prename),1,36) else trim(p.firstname)||' '||trim(p.lastname)||','||trim(p.prename) end as NAMEPAT -- check over 36
+,trim(p.prename) as TITLE
+,trim(p.firstname) as FNAME
+,trim(p.lastname) as LNAME
 ,case when p.pid <> '' then '1' else '' end as IDTYPE
  from visit v
 left join patient p on v.patient_id = p.patient_id 
