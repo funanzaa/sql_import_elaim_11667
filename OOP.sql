@@ -16,4 +16,4 @@ and v.visit_date::date <= '2021-09-01'
 and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
 and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
-and icd9.fix_operation_type_id = '1'
+--and icd9.fix_operation_type_id = '1'
