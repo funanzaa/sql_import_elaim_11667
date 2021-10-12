@@ -1,5 +1,6 @@
---OPD 05/10/64 v.1.2
+--OPD 05/10/64 v.1.3
 -- v.1.2 แก้ไข tab
+-- v.1.3 ปรับ login type 0
 select q.*
 from (
 		select v.hn as HN,'' as "CLINIC",to_char(visit_date::date,'yyyymmdd') as DATEOPD
@@ -27,8 +28,7 @@ from (
 	--type 2 = AE ในบัญชีเครือข่าย
 	    when TRIM(get_plan.description) = 'UC ฉุกเฉินในเครือข่าย (model 5)' or TRIM(get_plan.description) = 'UC ฉุกเฉิน /ยกเว้นค่าธรรมเนียม 30 บาท(กทม.)' then '3'
 	--type 0 = Refer ในบัญชีเครือข่ายเดียวกัน
-	    when TRIM(get_plan.description) = 'ศูนย์บริการสาธารณสุข 59 ทุ่งครุ(13702)' or TRIM(get_plan.description) = 'รักษ์ศิริคลินิกเวชกรรม สาขาทุ่งครุ (41864)' or TRIM(get_plan.description) = 'ศูนย์บริการสาธารณสุข 58 ล้อม-พิมเสน ฟักอุดม(13701)' or
-	         TRIM(get_plan.description) = 'สรรธนาคลินิกเวชกรรม (42097)' or TRIM(get_plan.description) = 'สิริยาสหคลินิก (15185)' or TRIM(get_plan.description) = 'ศูนย์บริการสาธารณสุข 39 ราษฎร์บูรณะ (13684)' then '0'
+	    when LENGTH(regexp_replace(get_plan.description, '\D','','g')) = 5 and get_plan.description not ilike '%กัน%' then '0'
 	--type 4 = OP พิการ
 	    when TRIM(get_plan.description) = 'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ในกรุงเทพ' or TRIM(get_plan.description) = 'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ต่างจังหวัด' then '4'
 	    else  '' end as OPTYPE --ประเภทการให้บริการ
