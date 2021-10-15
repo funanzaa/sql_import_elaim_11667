@@ -1,6 +1,7 @@
---OPD 05/10/64 v.1.3
+--OPD 15/10/64 v.1.4
 -- v.1.2 แก้ไข tab
 -- v.1.3 ปรับ login type 0
+--1.4 แก้ไขดึงเฉพาะสิทธิ์ ใน excel
 select q.*
 from (
 		select v.hn as HN,'' as "CLINIC",to_char(visit_date::date,'yyyymmdd') as DATEOPD
@@ -39,7 +40,23 @@ from (
 		when doctor_discharge_opd.fix_opd_discharge_status_id = '53' then 'consult'
 		when doctor_discharge_opd.fix_opd_discharge_status_id = '54' then '3' --Refer ต่อ
 		else '' end as TYPEOUT --สถานะผู้ป่วยเมื่อเสร็จสิ้นบริการ
-	from visit v -- ข้อมูลการเข้ารับบริการ
+	from (
+			with cte1 as 
+				(
+					select q.*
+					,case when q.base_plan_group_code in ('CHECKUP') and q.plan_code in ('PCP006') then 'UC'  -- check CHECKUP => PCP006 
+						  when q.base_plan_group_code in ('Model5','UC') then 'UC' end as chk_plan -- check 'Model5','UC' => UC
+					from (
+						select v.*,base_plan_group.base_plan_group_code,plan.plan_code 
+						from visit v 
+						left join visit_payment on v.visit_id = visit_payment.visit_id and visit_payment.priority = '1'
+						left join base_plan_group on visit_payment.base_plan_group_id = base_plan_group.base_plan_group_id and base_plan_group.base_plan_group_code in ('Model5','UC','CHECKUP') -- สิทธิ์ UC
+						left join plan on visit_payment.plan_id = plan.plan_id 
+					) q
+					where q.base_plan_group_code is not null 
+				)
+				select * from cte1 where cte1.chk_plan is not null 
+	) v -- visit ที่เป็นสิทธิ์ UC ตาม Excel ข้อมูลการเข้ารับบริการ
 	left join (select vital_sign_extend.visit_id,vital_sign_extend.main_symptom
 					from vital_sign_extend
 					inner join (

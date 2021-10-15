@@ -1,17 +1,17 @@
---OOP 15/10/64 v.1.3
---มาตรฐานแฟ้มข้อมูลหัตถการผู้ป่วยนอก (OOP)
---1.1 ลบ . colunm OPER
---1.2 ลบ เลือกเฉพาะ ไม่ null icd9
---1.3 แก้ไขดึงเฉพาะสิทธิ์ ใน excel
-with cte1 as (
-	select v.hn as HN
-	,to_char(v.visit_date::date,'yyyymmdd') as DATEOPD
-	,'00100' as CLINIC -- default
-	,replace(icd9.icd9_code,'.','') as OPER
-	,'' as DROPID
+--CHT 13/10/64 v.1.0
+-- มาตรฐานแฟ้มข้อมูลการเงิน (แบบสรุป) (CHT)
+with cte2 as (
+	select v.hn as hn
+	,v.an as AN
+	,v.financial_discharge_date as "DATE"
+	,unit_price_sale::decimal * quantity::decimal as total
+	,'0' as PAID
+	,'' as PTTYPE
 	,p.pid as PERSON_ID
-	,v.vn as SEQ
-	,'' as SERVPRICE -- ราคาค่าบริการหัตถการ Y/N
+	,v.vn  as SEQ
+	,'' as OPD_MEMO 
+	, '' as INVOICE_NO
+	,'' as INVOICE_LT
 	from (
 			with cte1 as 
 				(
@@ -27,17 +27,22 @@ with cte1 as (
 					) q
 					where q.base_plan_group_code is not null 
 				)
-				select * from cte1 where cte1.chk_plan is not null 
+				select * from cte1 where cte1.chk_plan is not null -- visit ที่เป็นสิทธิ์ UC ตาม Excel
 	) v --เฉพาะ visit ที่เป็นสิทธิ์ UC ตาม Excel
-	left join diagnosis_icd9 icd9 on v.visit_id = icd9.visit_id 
+	left join order_item on v.visit_id = order_item.visit_id 
 	left join patient p on v.patient_id = p.patient_id 
 	where v.visit_date::date >= '2021-09-01' 
 	and v.visit_date::date <= '2021-09-02'
 	and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 	and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
-	and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
-	--and icd9.fix_operation_type_id = '1'
+	--and v.vn in ('6409010001','6409010002')
+	--and v.fix_visit_type_id = '1' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
+	order by v.vn
 )
-select  * 
-from cte1
-where cte1.oper is not null  -- ลบ เลือกเฉพาะ ไม่ว่าง icd9
+select hn,cte2.an
+,to_char(cte2."DATE"::date,'yyyymmdd') as "DATE" --วันที่คิดค่ารักษา วันที่จำหน่าย 
+,sum(cte2.total) as total
+,cte2.paid,cte2.pttype,cte2.person_id,cte2.seq,cte2.opd_memo,cte2.invoice_no,cte2.invoice_lt
+from cte2
+--where cte2.seq in ('6409010001','6409010002')
+group by hn,cte2.an,cte2."DATE",cte2.paid,cte2.pttype,cte2.person_id,cte2.seq,cte2.opd_memo,cte2.invoice_no,cte2.invoice_lt

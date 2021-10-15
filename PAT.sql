@@ -1,7 +1,8 @@
---PAT 08/10/64 v.1.4
+--PAT 15/10/64 v.1.5
 -- มาตรฐานแฟ้มข้อมูลผู้ป่วยกลาง (PAT) 
 -- v.1.3 ตัด colum dup
 -- v.1.4 ตัด fname,lname tab
+--1.5 แก้ไขดึงเฉพาะสิทธิ์ ใน excel
 with cte1 as 
 (
 	select base_site.base_site_id 
@@ -22,7 +23,23 @@ with cte1 as
 	,regexp_replace(p.firstname, '[^\w]+','','g') as FNAME
 	,regexp_replace(p.lastname, '[^\w]+','','g') as LNAME
 	,case when p.pid <> '' then '1' else '' end as IDTYPE
-	 from visit v
+	 from (
+			with cte1 as 
+				(
+					select q.*
+					,case when q.base_plan_group_code in ('CHECKUP') and q.plan_code in ('PCP006') then 'UC'  -- check CHECKUP => PCP006 
+						  when q.base_plan_group_code in ('Model5','UC') then 'UC' end as chk_plan -- check 'Model5','UC' => UC
+					from (
+						select v.*,base_plan_group.base_plan_group_code,plan.plan_code 
+						from visit v 
+						left join visit_payment on v.visit_id = visit_payment.visit_id and visit_payment.priority = '1'
+						left join base_plan_group on visit_payment.base_plan_group_id = base_plan_group.base_plan_group_id and base_plan_group.base_plan_group_code in ('Model5','UC','CHECKUP') -- สิทธิ์ UC
+						left join plan on visit_payment.plan_id = plan.plan_id 
+					) q
+					where q.base_plan_group_code is not null 
+				)
+				select * from cte1 where cte1.chk_plan is not null 
+	) v --เฉพาะ visit ที่เป็นสิทธิ์ UC ตาม Excel 
 	left join patient p on v.patient_id = p.patient_id 
 	left join fix_gender gender on p.fix_gender_id = gender.fix_gender_id -- sex
 	left join fix_marriage marriage on p.fix_marriage_id = marriage.fix_marriage_id 
@@ -46,5 +63,3 @@ select cte1.base_site_id as hcode,cte1.hn,cte1.changwat,cte1.amphur,cte1.dob,cte
 from cte1
 group by cte1.base_site_id,cte1.hn,cte1.changwat,cte1.amphur,cte1.dob,cte1.sex,cte1.marriage,cte1.occupa
 ,cte1.nation,cte1.person_id,cte1.namepat,cte1.title,cte1.fname,cte1.lname,cte1.idtype
-
-
