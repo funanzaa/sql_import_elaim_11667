@@ -34,7 +34,9 @@ with cte2 as (
 	--and v.fix_visit_type_id = '1' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
 	order by v.vn
 )
-select q.hn,q.an,q."DATE",q.total
+select q.hn,q.an,q."DATE"
+--,to_char(q.total,'999999999D99') as total
+,q.total::numeric(10,2) as total
 ,'0' as PAID
 ,'' as PTTYPE
 ,q.person_id,q.seq
@@ -44,9 +46,11 @@ select q.hn,q.an,q."DATE",q.total
 from (
 	select hn,cte2.an
 	,to_char(cte2."DATE"::date,'yyyymmdd') as "DATE" --วันที่คิดค่ารักษา วันที่จำหน่าย 
-	,to_char(sum(cte2.total),'999999999D99') as total
+	--,to_char(sum(cte2.total),'999999999D99') as total
+	, sum(cte2.total) as total
 	,cte2.person_id,cte2.seq
 	from cte2
+	where cte2.total is not null -- ไม่เอา ค่าใช้จ่ายที่ว่าง
 	group by hn,cte2.an,cte2."DATE"
 	,cte2.person_id,cte2.seq
 ) q
