@@ -1,7 +1,8 @@
---ORF 07/10/64 v.1.2
+--ORF 07/10/64 v.1.3
 --มาตรฐานแฟ้มข้อมูลผู้ป่วยนอกที่ต้องส่งต่อ (ORF)
 --1.1 ปรับ login type 0
 --1.2 แก้ไขดึงเฉพาะสิทธิ์ ใน excel
+--1.3 ดึงประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก
 select v.hn as HN
 ,to_char(v.visit_date::date,'yyyymmdd') as DATEOPD
 ,'00100' as CLINIC -- default
@@ -41,5 +42,6 @@ where v.visit_date::date >= '2021-09-01'
 and v.visit_date::date <= '2021-09-02'
 and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
+and v.fix_visit_type_id = '0' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
 and only_type0.op_type = '0'
 order by v.vn 

@@ -1,17 +1,13 @@
---CHT 13/10/64 v.1.0
+--CHT 18/10/64 v.1.1
 -- มาตรฐานแฟ้มข้อมูลการเงิน (แบบสรุป) (CHT)
+--v.1.1 => changed codeing
 with cte2 as (
 	select v.hn as hn
 	,v.an as AN
 	,v.financial_discharge_date as "DATE"
 	,unit_price_sale::decimal * quantity::decimal as total
-	,'0' as PAID
-	,'' as PTTYPE
 	,p.pid as PERSON_ID
 	,v.vn  as SEQ
-	,'' as OPD_MEMO 
-	, '' as INVOICE_NO
-	,'' as INVOICE_LT
 	from (
 			with cte1 as 
 				(
@@ -35,14 +31,22 @@ with cte2 as (
 	and v.visit_date::date <= '2021-09-02'
 	and v.financial_discharge = '1' --จำหน่ายทางการเงินแล้ว
 	and v.doctor_discharge = '1' --จำหน่ายทางการแพทย์แล้ว
-	--and v.vn in ('6409010001','6409010002')
 	--and v.fix_visit_type_id = '1' --ประเภทการเข้ารับบริการ 0 ผู้ป่วยนอก,1 ผู้ป่วยใน
 	order by v.vn
 )
-select hn,cte2.an
-,to_char(cte2."DATE"::date,'yyyymmdd') as "DATE" --วันที่คิดค่ารักษา วันที่จำหน่าย 
-,sum(cte2.total) as total
-,cte2.paid,cte2.pttype,cte2.person_id,cte2.seq,cte2.opd_memo,cte2.invoice_no,cte2.invoice_lt
-from cte2
---where cte2.seq in ('6409010001','6409010002')
-group by hn,cte2.an,cte2."DATE",cte2.paid,cte2.pttype,cte2.person_id,cte2.seq,cte2.opd_memo,cte2.invoice_no,cte2.invoice_lt
+select q.hn,q.an,q."DATE",q.total
+,'0' as PAID
+,'' as PTTYPE
+,q.person_id,q.seq
+	,'' as OPD_MEMO 
+, '' as INVOICE_NO
+,'' as INVOICE_LT
+from (
+	select hn,cte2.an
+	,to_char(cte2."DATE"::date,'yyyymmdd') as "DATE" --วันที่คิดค่ารักษา วันที่จำหน่าย 
+	,to_char(sum(cte2.total),'999999999D99') as total
+	,cte2.person_id,cte2.seq
+	from cte2
+	group by hn,cte2.an,cte2."DATE"
+	,cte2.person_id,cte2.seq
+) q
