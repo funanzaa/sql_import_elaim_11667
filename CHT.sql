@@ -1,11 +1,13 @@
---CHT 18/10/64 v.1.1
+--CHT 18/10/64 v.1.3
 -- มาตรฐานแฟ้มข้อมูลการเงิน (แบบสรุป) (CHT)
 --v.1.1 => changed codeing
+--v.1.2 => ไม่ดึงราคาที่ตีดลบ
 with cte2 as (
 	select v.hn as hn
 	,v.an as AN
 	,v.financial_discharge_date as "DATE"
 	,unit_price_sale::decimal * quantity::decimal as total
+	,quantity
 	,p.pid as PERSON_ID
 	,v.vn  as SEQ
 	from (
@@ -25,7 +27,11 @@ with cte2 as (
 				)
 				select * from cte1 where cte1.chk_plan is not null -- visit ที่เป็นสิทธิ์ UC ตาม Excel
 	) v --เฉพาะ visit ที่เป็นสิทธิ์ UC ตาม Excel
-	left join order_item on v.visit_id = order_item.visit_id 
+	left join (
+	select order_item_id,visit_id,base_billing_group_id,unit_price_sale,quantity 
+	from order_item 
+	where quantity not like '-%' and unit_price_sale <> '0'-- GET table order ที่ไม่ติดลบ, unit_price_sale <> '0'
+	)order_item on v.visit_id = order_item.visit_id 
 	left join patient p on v.patient_id = p.patient_id 
 	where v.visit_date::date >= '2021-09-01' 
 	and v.visit_date::date <= '2021-09-02'
@@ -54,3 +60,4 @@ from (
 	group by hn,cte2.an,cte2."DATE"
 	,cte2.person_id,cte2.seq
 ) q
+--where q.SEQ = '6409020426'
