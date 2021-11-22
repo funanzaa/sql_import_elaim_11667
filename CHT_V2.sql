@@ -1,7 +1,8 @@
---CHT 11/11/64 v.1.2
+--CHT 11/11/64 v.1.3
 -- มาตรฐานแฟ้มข้อมูลการเงิน (แบบสรุป) (CHT)
 --v.1.1 => changed codeing
 --v.1.2 => ไม่ดึงราคาที่ตีดลบ , ค้างชำระ
+--v.1.3 => item ไม่มีใน opbkk chad
 with cte2 as (
 	select v.hn as hn
 	,v.an as AN
@@ -28,10 +29,11 @@ with cte2 as (
 				select * from cte1 where cte1.chk_plan is not null -- visit ที่เป็นสิทธิ์ UC ตาม Excel
 	) v --เฉพาะ visit ที่เป็นสิทธิ์ UC ตาม Excel
 	left join (
-	select order_item_id,visit_id,base_billing_group_id,unit_price_sale,quantity 
-	from order_item 
-	where quantity not like '-%' and unit_price_sale <> '0'-- GET table order ที่ไม่ติดลบ, unit_price_sale <> '0'
-	)order_item on v.visit_id = order_item.visit_id 
+		select order_item_id,visit_id,base_billing_group_id,unit_price_sale,quantity 
+		from order_item 
+		where quantity not like '-%' and unit_price_sale <> '0'-- GET table order ที่ไม่ติดลบ, unit_price_sale <> '0'
+		and item_id not in (select item_code from export_opbkk_chatail) -- ไม่มีใน opbkk chad
+		) order_item on v.visit_id = order_item.visit_id 
 	left join patient p on v.patient_id = p.patient_id 
 	where v.visit_date::date >= '2021-09-01' 
 	and v.visit_date::date <= '2021-09-02'
@@ -62,3 +64,7 @@ from (
 	,cte2.person_id,cte2.seq
 ) q
 --where q.SEQ = '6409010080'
+
+
+
+--select * from order_item

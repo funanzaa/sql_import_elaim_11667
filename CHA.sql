@@ -3,13 +3,9 @@ select v.hn as hn
 ,v.an as AN
 ,to_char(v.visit_date::date,'yyyymmdd')as "DATE"
 ,case when base_billing_group.map_chrgitem_opd = '' then base_billing_group.map_chrgitem_ipd else base_billing_group.map_chrgitem_opd end as CHRGITEM 
-,(order_item.unit_price_sale::decimal * order_item.quantity::decimal) as total
---,,q.total::numeric(10,2) as total
+,((order_item.unit_price_sale::decimal * order_item.quantity::decimal))::numeric(12,2) as total
 ,p.pid as PERSON_ID
 ,v.vn  as SEQ
---,order_item.base_billing_group_id
---,unit_price_sale::decimal * quantity::decimal as total
---,p.pid as PERSON_ID
 --,v.visit_id 
 	from (
 			with cte1 as 
@@ -36,5 +32,10 @@ left join base_billing_group on order_item.base_billing_group_id = base_billing_
 left join patient p on v.patient_id = p.patient_id 
 where v.visit_date::date >= '2021-09-01' 
 and v.visit_date::date <= '2021-09-02'
+and v.financial_discharge <> '0' --ค้างชำระ
+--and v.vn = '6409010080'
 --and v.visit_id = '221090218185837601' 
 --and order_item.base_billing_group_id = '01.02.01.05.00.00'
+
+
+

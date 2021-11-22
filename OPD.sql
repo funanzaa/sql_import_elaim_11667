@@ -1,7 +1,6 @@
---OPD 05/10/64 v.1.5
+--OPD 05/10/64 v.1.6
 -- v.1.2 แก้ไข tab
 -- v.1.3 ปรับ login type 0
--- V.1.5 ปรับ Query slow status AE = 3 
 select q.*
 from (
 		select v.hn as HN,'' as "CLINIC",to_char(visit_date::date,'yyyymmdd') as DATEOPD
@@ -32,7 +31,7 @@ from (
 	    when LENGTH(regexp_replace(get_plan.description, '\D','','g')) = 5 and get_plan.description not ilike '%กัน%' then '0'
 	--type 4 = OP พิการ
 	    when TRIM(get_plan.description) = 'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ในกรุงเทพ' or TRIM(get_plan.description) = 'UC บัตรผู้พิการ /ยกเว้นค่าธรรมเนียม 30 บาท ต่างจังหวัด' then '4'
-	    else  '1' end as OPTYPE --ประเภทการให้บริการ
+	    else  '' end as OPTYPE --ประเภทการให้บริการ
 	--,TRIM(get_plan.description) as test_OPTYPE
 	,case when v.fix_coming_type is null then '0' else '1' end as TYPEIN --ประเภทการมารับบริการ
 	,case when doctor_discharge_opd.fix_opd_discharge_status_id = '51' then '1' -- จำหน่ายกลับบ้าน
