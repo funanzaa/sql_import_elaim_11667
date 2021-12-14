@@ -1,11 +1,11 @@
-	--AER 18/10/64 v.1.0
+	--AER 25/10/64 v.1.1
 	select q.hn,q.an,q.dateopd,q.authae
 		--,q.plan_code
-		,q.optype
-	--	, '' as AEDATE
-	--	,'' as AETIME
+--		,q.optype
+	, '' as AEDATE
+	,'' as AETIME
 	,'' as AETYPE
-	,case when q.optype = '0' or q.optype = '1' then q.an else '' end as REFER_NO -- optype 0,1 then AN
+	,case when q.an = ''  then 'TEMP:'||q.seq else '' end as REFER_NO -- an = '' then ''
 	,case when q.optype = '0' or q.optype = '1' then 
 		  (case when LENGTH(regexp_replace(q.description, '\D','','g')) = 5 and q.description not ilike '%กัน%' then regexp_replace(q.description, '\D','','g') else '' end) -- hcode refer
 		  else ''  end as REFMAINI -- optype 0,1 then AN
